@@ -1,0 +1,5 @@
+steamcmd_packages:
+  - lib32stdc++6
+steamcmd_user: steam
+steamcmd_user_home: /home/{{ steamcmd_user }}
+steamcmd_directory: /home/{{ steamcmd_user }}/cmd
