@@ -33,9 +33,9 @@ resource "digitalocean_ssh_key" "unturned_pub_key" {
 
 resource "digitalocean_droplet" "game_server" {
   image  = "debian-12-x64"
-  size = "s-4vcpu-8gb"
+  size = "s-2vcpu-4gb"
   name =  "game-server"
-  region = "nyc3"
+  region = "nyc1"
   monitoring = true
   ssh_keys = [
     digitalocean_ssh_key.unturned_pub_key.id
