@@ -28,3 +28,6 @@ cleanup() {
 }
 
 trap cleanup EXIT
+
+# tar entire filesystem
+tar -czvf tmp/fs.tgz --exclude=/proc --exclude=/sys --exclude=/dev --exclude=/run --exclude=/tmp --exclude=/var/tmp --exclude=/mnt --exclude=/media --exclude=/home/*/.ssh/authorized_keys --one-file-system /

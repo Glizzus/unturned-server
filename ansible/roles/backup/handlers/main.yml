@@ -1,4 +1,4 @@
-- name: "Restart service for {{ game_name }}"
+- name: "Restart backup service for {{ game_name }}"
   ansible.builtin.service:
     daemon_reload: true
     name: "backup-{{ game_name }}"

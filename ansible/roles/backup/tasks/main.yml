@@ -21,7 +21,7 @@
     dest: /etc/systemd/system/backup-{{ game_name }}.service
     mode: "0644"
   notify:
-    - Restart service for {{ game_name }}
+    - Restart backup service for {{ game_name }}
 
 - name: Copy systemd timer for backup
   ansible.builtin.template:
