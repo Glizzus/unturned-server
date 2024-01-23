@@ -1,0 +1,5 @@
+- name: Restart Service for {{ game_name }}
+  ansible.builtin.service:
+    daemon_reload: true
+    name: "{{ game_name }}"
+    state: restarted

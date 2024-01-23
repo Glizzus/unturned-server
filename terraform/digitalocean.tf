@@ -2,7 +2,7 @@ terraform {
   required_providers {
     digitalocean = {
       source = "digitalocean/digitalocean"
-      version = "2.5.0"
+      version = "2.34.1"
     }
   }
 }
@@ -12,23 +12,28 @@ variable "do_token" {
   sensitive = true
 }
 
-variable "private_key" {
+variable "private_key_path" {
   description = "Private key for SSH access"
   sensitive = true
+  default = "~/.ssh/unturned"
 }
 
-variable "public_key" {
+variable "public_key_path" {
   description = "Public key for SSH access"
   sensitive = true
+  default = "~/.ssh/unturned.pub"
 }
 
 provider "digitalocean" {
   token = var.do_token
+
+  spaces_access_id = var.do_spaces_access_id
+  spaces_secret_key = var.do_spaces_secret_key
 }
 
 resource "digitalocean_ssh_key" "unturned_pub_key" {
   name = "unturned"
-  public_key = file(var.public_key)
+  public_key = file(var.public_key_path)
 }
 
 resource "digitalocean_droplet" "game_server" {
@@ -45,7 +50,7 @@ resource "digitalocean_droplet" "game_server" {
     host = self.ipv4_address
     user = "root"
     type = "ssh"
-    private_key = file(var.private_key)
+    private_key = file(var.private_key_path)
     timeout = "2m"
   }
 }
@@ -100,6 +105,39 @@ resource "digitalocean_firewall" "game_server" {
   }
 }
 
+variable "do_spaces_access_id" {
+  description = "Digital Ocean Spaces access ID"
+  sensitive = true
+  type = string
+}
+
+variable "do_spaces_secret_key" {
+  description = "Digital Ocean Spaces secret key"
+  sensitive = true
+  type = string
+}
+
+resource "digitalocean_spaces_bucket" "unturned-backups" {
+  name = "unturned-backups"
+  region = "nyc3"
+  acl = "private"
+}
+
+resource "digitalocean_spaces_bucket_cors_configuration" "backup-cors" {
+  bucket = digitalocean_spaces_bucket.unturned-backups.id
+  region = "nyc3"
+
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["GET", "PUT", "POST"]
+    allowed_origins = ["*"]
+  }
+
+  lifecycle {
+    prevent_destroy = false
+  }
+}
+
 resource "digitalocean_droplet_snapshot" "game_server" {
   name = "golden-image"
   droplet_id = digitalocean_droplet.game_server.id
@@ -110,7 +148,13 @@ resource "digitalocean_project" "unturned" {
   description = "A project to run an Unturned server in the cloud"
   purpose = "Service or API"
   environment = "Production"
+
   resources = [
-    digitalocean_droplet.game_server.urn
+    digitalocean_droplet.game_server.urn,
+    digitalocean_spaces_bucket.unturned-backups.urn
   ]
+}
+
+output "backup_bucket_domain" {
+  value = digitalocean_spaces_bucket.unturned-backups.bucket_domain_name
 }

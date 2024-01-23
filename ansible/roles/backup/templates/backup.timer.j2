@@ -1,0 +1,9 @@
+[Unit]
+Description=Runs {{ game_name }} backup service periodically
+
+[Timer]
+OnCalendar=hourly
+persistent=true
+
+[Install]
+WantedBy=timers.target

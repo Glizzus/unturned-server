@@ -1,0 +1,10 @@
+[Unit]
+Description = "{{ game_name }} Backup Service"
+
+[Service]
+type=oneshot
+ExecStart=/usr/local/bin/backup-{{ game_name }}.sh {{ game_name }} "{{ steamcmd_directory }}/{{ game_name }}/Servers/{{ server_name }}" s3://{{ s3_bucket }}
+user=root
+
+[Install]
+WantedBy=multi-user.target

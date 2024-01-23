@@ -1,0 +1,58 @@
+- name: Template script.steamcmd to Host
+  ansible.builtin.template:
+    src: templates/script.steamcmd.j2
+    dest: "{{ steamcmd_directory }}/{{ game_name }}.steamcmd"
+    mode: "0755"
+  become: true
+  become_user: "{{ steamcmd_user }}"
+
+- name: Run script.steamcmd
+  ansible.builtin.command:
+    cmd: "{{ steamcmd_directory }}/steamcmd.sh +runscript {{ steamcmd_directory }}/{{ game_name }}.steamcmd"
+  changed_when: false
+  become: true
+  become_user: "{{ steamcmd_user }}"
+
+- name: Create Server Config Directory
+  ansible.builtin.file:
+    path: "{{ steamcmd_directory }}/{{ game_name }}/Servers/{{ server_name }}/Server"
+    state: directory
+    mode: "0755"
+  become: true
+  become_user: "{{ steamcmd_user }}"
+
+- name: Copy Commands.dat Configuration
+  ansible.builtin.template:
+    src: "templates/Commands.dat.j2"
+    dest: "{{ steamcmd_directory }}/{{ game_name }}/Servers/{{ server_name }}/Server/Commands.dat"
+    mode: "0644"
+  become: true
+  become_user: "{{ steamcmd_user }}"
+  notify:
+    - Restart Service for {{ game_name }}
+
+- name: Determine if local WorkshopDownloadConfig.json exists
+  ansible.builtin.stat:
+    path: "{{ playbook_dir }}/files/WorkshopDownloadConfig.json"
+  delegate_to: localhost
+  register: workshop_download_config_exists
+
+- name: Copy WorkshopDownloadConfig.json
+  ansible.builtin.copy:
+    src: "files/WorkshopDownloadConfig.json"
+    dest: "{{ steamcmd_directory }}/{{ game_name }}/Servers/{{ server_name }}/WorkshopDownloadConfig.json"
+    mode: "0644"
+  when: workshop_download_config_exists.stat.exists
+  become: true
+  become_user: "{{ steamcmd_user }}"
+  notify:
+    - Restart Service for {{ game_name }}
+
+- name: Copy Systemd Service File
+  ansible.builtin.template:
+    src: "templates/steamcmd.service.j2"
+    dest: /etc/systemd/system/{{ game_name }}.service
+    mode: "0644"
+  notify:
+    - Restart Service for {{ game_name }}
+

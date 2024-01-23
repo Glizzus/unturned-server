@@ -1,0 +1,46 @@
+- name: Install SteamCMD Dependencies
+  ansible.builtin.apt:
+    name: lib32stdc++6
+    state: present
+  become: true
+
+- name: Create steam User
+  ansible.builtin.user:
+    name: "{{ steamcmd_user }}"
+    shell: /bin/bash
+    home: "{{ steamcmd_user_home }}"
+    createhome: true
+    state: present
+
+- name: Create Directory for SteamCMD
+  ansible.builtin.file:
+    path: "{{ steamcmd_directory }}"
+    state: directory
+    recurse: true
+  become: true
+  become_user: "{{ steamcmd_user }}"
+
+- name: Check if steam Exists
+  ansible.builtin.stat:
+    path: "{{ steamcmd_directory }}/steamcmd.sh"
+  register: steamcmd_exists
+  become: true
+  become_user: "{{ steamcmd_user }}"
+
+- name: Download SteamCMD
+  ansible.builtin.get_url:
+    url: https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz
+    dest: "{{ steamcmd_directory }}/steamcmd.tar.gz"
+    mode: "0755"
+  when: not steamcmd_exists.stat.exists
+  become: true
+  become_user: "{{ steamcmd_user }}"
+
+- name: Extract SteamCMD
+  ansible.builtin.unarchive:
+    src: "{{ steamcmd_directory }}/steamcmd.tar.gz"
+    dest: "{{ steamcmd_directory }}"
+    copy: false
+  when: not steamcmd_exists.stat.exists
+  become: true
+  become_user: "{{ steamcmd_user }}"

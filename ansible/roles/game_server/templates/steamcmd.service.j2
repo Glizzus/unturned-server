@@ -1,0 +1,14 @@
+[Unit]
+Description=Unturned Dedicated Server
+After=network.target
+
+[Service]
+Type=simple
+ExecStart={{ steamcmd_directory }}/{{ game_name }}/ServerHelper.sh -ThreadedConsole +InternetServer/{{ server_name }}
+ExecStop=/bin/kill -s QUIT $MAINPID
+WorkingDirectory={{ steamcmd_directory }}/{{ game_name }}
+User={{ steamcmd_user }}
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

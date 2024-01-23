@@ -1,0 +1,11 @@
+- name: "Restart service for {{ game_name }}"
+  ansible.builtin.service:
+    daemon_reload: true
+    name: "backup-{{ game_name }}"
+    state: restarted
+
+- name: "Restart backup timer for {{ game_name }}"
+  ansible.builtin.service:
+    daemon_reload: true
+    name: backup-{{ game_name }}.timer
+    state: restarted

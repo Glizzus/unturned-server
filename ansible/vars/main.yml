@@ -1,5 +1,9 @@
-steamcmd_packages:
-  - lib32stdc++6
+s3_region: US
+s3_bucket: unturned-backups
+s3_endpoint: nyc3.digitaloceanspaces.com
+
 steamcmd_user: steam
-steamcmd_user_home: /home/{{ steamcmd_user }}
-steamcmd_directory: /home/{{ steamcmd_user }}/cmd
+steamcmd_user_home: "/home/{{ steamcmd_user }}"
+steamcmd_directory: "{{ steamcmd_user_home }}/cmd"
+
+backup_archive: "unturned_backup_20240122_022554.tar.gz"
