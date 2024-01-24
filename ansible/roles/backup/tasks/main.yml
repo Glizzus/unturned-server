@@ -1,6 +1,7 @@
 - name: Install s3cmd
   ansible.builtin.package:
-    name: s3cmd
+    name:
+      - s3cmd
     state: present
 
 - name: Configure s3cmd

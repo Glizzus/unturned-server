@@ -1,33 +1,38 @@
 #!/bin/sh
 
-set -e
+game_name=$1
+dir_to_backup=$2
+base_bucket_url=$3
 
-GAME=$1
-BACKUP_DIR=$2
-BUCKET_URL=$3
-
-BACKUP_NAME="${GAME}_backup_$(date +%Y%m%d_%H%M%S).tar.gz"
-TEMP_BACKUP_DIR="/tmp/${BACKUP_NAME}"
+backup_archive="${game_name}_backup_$(date +%Y%m%d_%H%M%S).tar.gz"
+temp_backup_dir="/tmp/${backup_archive}"
 
 do_tar() {
     # We use basename to avoid the full path being included in the tar
-    tar -czf "$TEMP_BACKUP_DIR" "$(basename "$BACKUP_DIR")"
+    tar -czf "$temp_backup_dir" "$(basename "$dir_to_backup")"
 }
+(cd "$(dirname "$dir_to_backup")" && do_tar)
 
-# Create backup
-# We need to cd into the directory to avoid the full path being included in the tar,
-# while also avoiding the pesky ./ prefix that would be included if we didn't cd
-(cd "$(dirname "$BACKUP_DIR")" && do_tar)
+hash=$(sha256sum "$temp_backup_dir" | awk '{print $1}')
+echo "Hash of $backup_archive: $hash"
 
-# Upload to S3
+hash_bucket_url="${base_bucket_url}-hashes"
+existing_hash=$(s3cmd --no-progress get "${hash_bucket_url}/${hash}" -)
+
+if [ -n "$existing_hash" ]; then
+    echo "Hash $hash already exists in bucket $hash_bucket_url"
+    exit 0
+fi
+
+# Upload hash to bucket
+echo "$backup_archive" > "/tmp/${hash}"
+s3cmd put "/tmp/${hash}" "${hash_bucket_url}/"
+
 # The trailing slash means the file is uploaded with the file name
-s3cmd put "$TEMP_BACKUP_DIR" "$BUCKET_URL/"
+s3cmd put "$temp_backup_dir" "$base_bucket_url/"
 
 cleanup() {
-    rm "$TEMP_BACKUP_DIR"
+    rm "$temp_backup_dir"
 }
 
 trap cleanup EXIT
-
-# tar entire filesystem
-tar -czvf tmp/fs.tgz --exclude=/proc --exclude=/sys --exclude=/dev --exclude=/run --exclude=/tmp --exclude=/var/tmp --exclude=/mnt --exclude=/media --exclude=/home/*/.ssh/authorized_keys --one-file-system /

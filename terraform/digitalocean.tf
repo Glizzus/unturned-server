@@ -124,19 +124,10 @@ resource "digitalocean_spaces_bucket" "unturned-backups" {
   acl = "private"
 }
 
-resource "digitalocean_spaces_bucket_cors_configuration" "backup-cors" {
-  bucket = digitalocean_spaces_bucket.unturned-backups.id
+resource "digitalocean_spaces_bucket" "unturned-backups-hashes" {
+  name = "${digitalocean_spaces_bucket.unturned-backups.name}-hashes"
   region = "nyc3"
-
-  cors_rule {
-    allowed_headers = ["*"]
-    allowed_methods = ["GET", "PUT", "POST"]
-    allowed_origins = ["*"]
-  }
-
-  lifecycle {
-    prevent_destroy = false
-  }
+  acl = "private"
 }
 
 resource "digitalocean_droplet_snapshot" "game_server" {
@@ -158,4 +149,12 @@ resource "digitalocean_project" "unturned" {
 
 output "backup_bucket_domain" {
   value = digitalocean_spaces_bucket.unturned-backups.bucket_domain_name
+}
+
+output "backup_hash_bucket_domain" {
+  value = digitalocean_spaces_bucket.unturned-backups-hashes.bucket_domain_name
+}
+
+output "droplet_ip" {
+  value = digitalocean_droplet.game_server.ipv4_address
 }
